@@ -1,0 +1,41 @@
+gateways:
+  default:
+    port: 3000
+llm:
+  gateways:
+  - default
+  policies:
+    apiKey:
+      keys:
+      - key: agw_sk_enterprise_demo
+        metadata:
+          name: Enterprise Demo Key
+          owner: admin
+      mode: optional
+  providers:
+  - name: openai
+    provider: openAI
+    params:
+      apiKey: sk-placeholder-key
+  models:
+  - name: gpt-4o-mini
+    provider:
+      reference: openai
+    params:
+      model: gpt-4o-mini
+mcp:
+  gateways:
+  - default
+  policies:
+    cors:
+      allowOrigins:
+      - '*'
+      allowHeaders:
+      - mcp-protocol-version
+      - content-type
+      - cache-control
+      - mcp-session-id
+      - authorization
+      exposeHeaders:
+      - Mcp-Session-Id
+  targets: []

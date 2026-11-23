@@ -1,0 +1,17 @@
+services:
+  tunai-gateway:
+    image: ghcr.io/tunbq21/agent_gateway_personal:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: tunai-gateway
+    env_file:
+      - .env
+    volumes:
+      - ./config.personal.yaml:/config/config.yaml
+    ports:
+      - "3000:3000"    # Data Plane: LLM (/v1/*) & MCP (/mcp)
+      - "15005:15005"  # Personal Admin UI
+      - "15020:15020"  # Metrics
+      - "15021:15021"  # Readiness
+    restart: unless-stopped

@@ -1,0 +1,42 @@
+gateways:
+  default:
+    port: 3000
+
+llm:
+  gateways:
+  - default
+  policies:
+    cors:
+      allowOrigins:
+      - '*'
+      allowHeaders:
+      - content-type
+      - authorization
+  providers:
+  - name: openai
+    provider: openAI
+    params:
+      apiKey: $OPENAI_API_KEY
+  models:
+  - name: gpt-4o-mini
+    provider:
+      reference: openai
+    params:
+      model: gpt-4o-mini
+
+mcp:
+  gateways:
+  - default
+  policies:
+    cors:
+      allowOrigins:
+      - '*'
+      allowHeaders:
+      - mcp-protocol-version
+      - content-type
+      - cache-control
+      - mcp-session-id
+      - authorization
+      exposeHeaders:
+      - Mcp-Session-Id
+  targets: []
