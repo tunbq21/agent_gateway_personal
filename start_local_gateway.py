@@ -1,6 +1,6 @@
-"""Local Windows runner for Viettel AI Gateway (UI on :15000 + Data Plane on :3000).
+"""Local Windows runner for TunAI Personal Gateway (UI on :15000 + Data Plane on :3000).
 
-Serves the rebranded Viettel UI (`ui/dist`), exposes Control Plane config and resource
+Serves the TunAI UI (`ui/dist`), exposes Control Plane config and resource
 CRUD APIs, evaluates CEL expressions, enforces HS256 JWT / Virtual API Key / Budget /
 Guardrails / Transformation / Rate-Limit policies on `:3000`, and proxies MCP, LLM,
 and HTTP route traffic to configured upstream servers.
@@ -389,20 +389,14 @@ def _validate_jwt_policy(
     return True, claims
 
 
-_HARNESS_NOTES_SCRIPT = BASE_DIR.parent / "agentgateway-test-harness" / "ui_feature_notes.js"
-
-
 def render_ui_index_html() -> str:
-    """Read `ui/dist/index.html`, inject `<base href="/ui/">`, and attach local test-harness UI notes if present."""
+    """Read `ui/dist/index.html` and inject `<base href="/ui/">`."""
     index_file = UI_DIST_DIR / "index.html"
     if not index_file.exists():
         return "<html><body><h1>TunAI UI build missing</h1><p>Run pnpm build inside ui/.</p></body></html>"
     html = index_file.read_text(encoding="utf-8")
     if "<base " not in html:
         html = html.replace("<head>", '<head>\n\t\t<base href="/ui/">', 1)
-    if _HARNESS_NOTES_SCRIPT.is_file() and "/api/test-harness/ui-notes.js" not in html:
-        script_tag = '<script src="/api/test-harness/ui-notes.js" defer></script>\n\t</body>'
-        html = html.replace("</body>", script_tag, 1) if "</body>" in html else html + script_tag
     return html
 
 
@@ -1474,12 +1468,7 @@ async def healthz(_request: Request) -> JSONResponse:
 
 
 async def api_test_harness_ui_notes(_request: Request) -> Response:
-    if _HARNESS_NOTES_SCRIPT.is_file():
-        return Response(
-            content=_HARNESS_NOTES_SCRIPT.read_text(encoding="utf-8"),
-            media_type="application/javascript",
-        )
-    return PlainTextResponse("// Test harness UI notes script not present\n", media_type="application/javascript")
+    return PlainTextResponse("// Personal edition\n", media_type="application/javascript")
 
 
 async def serve_ui_spa(request: Request) -> Response:
@@ -2029,7 +2018,7 @@ async def _handle_multiplex_mcp(
                 except Exception:
                     continue
             _MCP_MULTIPLEX_SESSIONS[mux_sid] = sid_map
-            body_out = first_result or {"jsonrpc": "2.0", "id": req_id, "result": {"protocolVersion": "2025-03-26", "capabilities": {"tools": {}}, "serverInfo": {"name": "viettel-agentgateway", "version": "1.0"}}}
+            body_out = first_result or {"jsonrpc": "2.0", "id": req_id, "result": {"protocolVersion": "2025-03-26", "capabilities": {"tools": {}}, "serverInfo": {"name": "tunai-gateway", "version": "1.0"}}}
             resp_headers = {"mcp-session-id": mux_sid}
             _apply_header_transformations(resp_headers, policies.get("transformations"), "response", req_ctx)
             return JSONResponse(body_out, headers=resp_headers)

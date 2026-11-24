@@ -36,6 +36,7 @@ from start_local_gateway import render_ui_index_html
 UI_DIST_DIR = Path(os.environ.get("PERSONAL_UI_DIST", "/app/ui/dist"))
 CONFIG_FILE = os.environ.get("AGENTGATEWAY_CONFIG", "/config/config.yaml")
 RUST_ADMIN_BASE = "http://127.0.0.1:15000"
+RUST_DATA_BASE = "http://127.0.0.1:3000"
 PROXY_PORT = int(os.environ.get("PERSONAL_UI_PORT", os.environ.get("PORT", "15005")))
 BRAND_NAME = os.environ.get("GATEWAY_BRAND_NAME", "TunAI Gateway")
 
@@ -110,8 +111,10 @@ async def lifespan(starlette_app: Starlette):
     os.environ.setdefault("OPENAI_API_KEY", "sk-placeholder")
     proc = subprocess.Popen(["/app/agentgateway", "-f", CONFIG_FILE])
     client = httpx.AsyncClient(base_url=RUST_ADMIN_BASE, timeout=httpx.Timeout(60.0, read=None))
+    data_client = httpx.AsyncClient(base_url=RUST_DATA_BASE, timeout=httpx.Timeout(120.0, read=None))
     starlette_app.state.agentgateway_proc = proc
     starlette_app.state.http_client = client
+    starlette_app.state.data_client = data_client
     watcher = asyncio.create_task(_watch_rust_process(proc))
     try:
         for _ in range(30):
@@ -125,6 +128,7 @@ async def lifespan(starlette_app: Starlette):
     finally:
         watcher.cancel()
         await client.aclose()
+        await data_client.aclose()
         if proc.poll() is None:
             proc.send_signal(signal.SIGTERM)
             try:
@@ -152,8 +156,45 @@ async def serve_ui_spa(request: Request) -> Response:
     )
 
 
+def _is_data_plane_path(path: str) -> bool:
+    return path == "/v1" or path.startswith("/v1/") or path == "/mcp" or path.startswith("/mcp/")
+
+
+async def _stream_upstream(client: httpx.AsyncClient, request: Request, path: str, fwd_headers: dict[str, str], body: bytes) -> StreamingResponse:
+    req = client.build_request(request.method, path, headers=fwd_headers, content=body)
+    upstream = await client.send(req, stream=True)
+    resp_headers = {
+        k: v
+        for k, v in upstream.headers.items()
+        if k.lower() not in HOP_BY_HOP_HEADERS
+    }
+
+    async def iter_bytes():
+        try:
+            async for chunk in upstream.aiter_bytes():
+                yield chunk
+        finally:
+            await upstream.aclose()
+
+    return StreamingResponse(
+        iter_bytes(),
+        status_code=upstream.status_code,
+        headers=resp_headers,
+        media_type=upstream.headers.get("content-type"),
+    )
+
+
 async def proxy_to_rust_admin(request: Request) -> Response:
-    if not ALLOW_DANGEROUS_ADMIN and request.url.path.startswith(DANGEROUS_ADMIN_PREFIXES):
+    path = request.url.path
+    query_path = f"{path}?{request.url.query}" if request.url.query else path
+    fwd_headers = _strip_request_headers(request.headers)
+    body = await request.body()
+
+    if _is_data_plane_path(path):
+        data_client: httpx.AsyncClient = request.app.state.data_client
+        return await _stream_upstream(data_client, request, query_path, fwd_headers, body)
+
+    if not ALLOW_DANGEROUS_ADMIN and path.startswith(DANGEROUS_ADMIN_PREFIXES):
         return JSONResponse({"error": "Endpoint disabled on external UI proxy"}, status_code=403)
     if request.method != "OPTIONS":
         auth_err = _check_proxy_auth(request)
@@ -161,39 +202,13 @@ async def proxy_to_rust_admin(request: Request) -> Response:
             return auth_err
 
     http_client: httpx.AsyncClient = request.app.state.http_client
-    path = request.url.path
-    if request.url.query:
-        path = f"{path}?{request.url.query}"
 
-    fwd_headers = _strip_request_headers(request.headers)
-    body = await request.body()
-
-    if path.startswith("/api/logs/tail"):
-        req = http_client.build_request(request.method, path, headers=fwd_headers, content=body)
-        upstream = await http_client.send(req, stream=True)
-        resp_headers = {
-            k: v
-            for k, v in upstream.headers.items()
-            if k.lower() not in HOP_BY_HOP_HEADERS
-        }
-
-        async def iter_bytes():
-            try:
-                async for chunk in upstream.aiter_bytes():
-                    yield chunk
-            finally:
-                await upstream.aclose()
-
-        return StreamingResponse(
-            iter_bytes(),
-            status_code=upstream.status_code,
-            headers=resp_headers,
-            media_type=upstream.headers.get("content-type", "text/event-stream"),
-        )
+    if query_path.startswith("/api/logs/tail"):
+        return await _stream_upstream(http_client, request, query_path, fwd_headers, body)
 
     upstream = await http_client.request(
         method=request.method,
-        url=path,
+        url=query_path,
         headers=fwd_headers,
         content=body,
         follow_redirects=False,

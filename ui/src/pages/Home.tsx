@@ -496,8 +496,13 @@ function QuickConnectCard() {
 	const [activeClient, setActiveClient] = useState<QuickClientKey>('cursor');
 	const [copied, setCopied] = useState(false);
 
-	const origin = typeof window !== 'undefined' ? window.location.hostname : 'localhost';
-	const dataPlaneBase = `http://${origin}:3000`;
+	const isLocal =
+		typeof window === 'undefined' ||
+		window.location.hostname === 'localhost' ||
+		window.location.hostname === '127.0.0.1';
+	const dataPlaneBase = isLocal
+		? `http://${typeof window !== 'undefined' ? window.location.hostname : 'localhost'}:3000`
+		: window.location.origin;
 
 	const snippets: Record<QuickClientKey, { label: string; code: string }> = {
 		cursor: {
