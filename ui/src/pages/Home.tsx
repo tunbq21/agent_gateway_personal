@@ -139,7 +139,7 @@ export function HomePage() {
 			>
 				<section className="startup-panel">
 					<div className="startup-copy">
-						<h2 id="startup-title">Welcome to Viettel AI Gateway</h2>
+						<h2 id="startup-title">Welcome to TunAI Personal Gateway</h2>
 						<p>Choose what this gateway will serve. Anything skipped can be enabled later.</p>
 					</div>
 

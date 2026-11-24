@@ -23,8 +23,8 @@ export function LoginPage() {
 		<main className="login-page">
 			<section className="login-card" aria-labelledby="login-heading">
 				<div className="login-brand">
-					<img className="brand-logo brand-logo-light" src={logoLight} alt="Viettel AI Gateway" />
-					<img className="brand-logo brand-logo-dark" src={logoDark} alt="Viettel AI Gateway" />
+					<img className="brand-logo brand-logo-light" src={logoLight} alt="TunAI Gateway" />
+					<img className="brand-logo brand-logo-dark" src={logoDark} alt="TunAI Gateway" />
 				</div>
 				<h1 id="login-heading">Sign in</h1>
 				<p>Sign in with your organizationâ€™s identity provider to continue.</p>

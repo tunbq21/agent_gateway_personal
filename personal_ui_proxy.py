@@ -36,7 +36,7 @@ from start_local_gateway import render_ui_index_html
 UI_DIST_DIR = Path(os.environ.get("PERSONAL_UI_DIST", "/app/ui/dist"))
 CONFIG_FILE = os.environ.get("AGENTGATEWAY_CONFIG", "/config/config.yaml")
 RUST_ADMIN_BASE = "http://127.0.0.1:15000"
-PROXY_PORT = int(os.environ.get("PERSONAL_UI_PORT", "15005"))
+PROXY_PORT = int(os.environ.get("PERSONAL_UI_PORT", os.environ.get("PORT", "15005")))
 BRAND_NAME = os.environ.get("GATEWAY_BRAND_NAME", "TunAI Gateway")
 
 HOP_BY_HOP_HEADERS = {
@@ -107,6 +107,7 @@ async def _watch_rust_process(proc: subprocess.Popen[bytes]) -> None:
 
 @asynccontextmanager
 async def lifespan(starlette_app: Starlette):
+    os.environ.setdefault("OPENAI_API_KEY", "sk-placeholder")
     proc = subprocess.Popen(["/app/agentgateway", "-f", CONFIG_FILE])
     client = httpx.AsyncClient(base_url=RUST_ADMIN_BASE, timeout=httpx.Timeout(60.0, read=None))
     starlette_app.state.agentgateway_proc = proc

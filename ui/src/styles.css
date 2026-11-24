@@ -9,10 +9,10 @@
 	--line: #e5e7eb;
 	--line-strong: #d1d5db;
 	--placeholder: #98a2b3;
-	--primary: #ee0033;
-	--primary-strong: #c4002a;
-	--accent: #ee0033;
-	--accent-soft: #ffe9ed;
+	--primary: #4f46e5;
+	--primary-strong: #4338ca;
+	--accent: #2563eb;
+	--accent-soft: #eef2ff;
 	--warn: #b7791f;
 	--warn-bg: #fff7e6;
 	--info: #175cd3;
@@ -65,10 +65,10 @@ samp,
 	--line: #1f2937;
 	--line-strong: #374151;
 	--placeholder: #6b7280;
-	--primary: #ff3355;
-	--primary-strong: #ff7088;
-	--accent: #ff3355;
-	--accent-soft: #351019;
+	--primary: #6366f1;
+	--primary-strong: #818cf8;
+	--accent: #38bdf8;
+	--accent-soft: #1e1b4b;
 	--warn: #f2bd5c;
 	--warn-bg: #2b2315;
 	--info: #84caff;
@@ -6461,8 +6461,8 @@ textarea {
 
 
 /* ==========================================================================
-   Viettel enterprise theme overrides
-   Brand red: #ee0033. Keep this block last so it wins over the base rules.
+   TunAI personal theme overrides
+   Brand indigo-cyan. Keep this block last so it wins over the base rules.
    ========================================================================== */
 
 :root {
@@ -6471,7 +6471,7 @@ textarea {
 	--shadow-card-hover: 0 2px 4px rgb(16 24 40 / 0.05), 0 8px 20px rgb(16 24 40 / 0.07);
 	--radius-card: 12px;
 	--radius-control: 8px;
-	--brand-gradient: linear-gradient(135deg, #ff1f4b 0%, #ee0033 55%, #c4002a 100%);
+	--brand-gradient: linear-gradient(135deg, #06b6d4 0%, #3b82f6 50%, #4f46e5 100%);
 }
 
 :root[data-theme='dark'] {

@@ -396,7 +396,7 @@ def render_ui_index_html() -> str:
     """Read `ui/dist/index.html`, inject `<base href="/ui/">`, and attach local test-harness UI notes if present."""
     index_file = UI_DIST_DIR / "index.html"
     if not index_file.exists():
-        return "<html><body><h1>Viettel UI build missing</h1><p>Run pnpm build inside ui/.</p></body></html>"
+        return "<html><body><h1>TunAI UI build missing</h1><p>Run pnpm build inside ui/.</p></body></html>"
     html = index_file.read_text(encoding="utf-8")
     if "<base " not in html:
         html = html.replace("<head>", '<head>\n\t\t<base href="/ui/">', 1)
@@ -1096,13 +1096,13 @@ async def api_runtime(_request: Request) -> JSONResponse:
         {
             "user": {
                 "subject": "admin",
-                "name": "Viettel Admin",
-                "email": "admin@viettel.com.vn",
+                "name": "TunAI Admin",
+                "email": "tunbq21@personal.local",
                 "canLogout": False,
             },
             "build": {
-                "version": "Viettel Enterprise v1.0",
-                "gitRevision": "viettel-main",
+                "version": "TunAI Personal v1.0",
+                "gitRevision": "personal-main",
                 "rustVersion": "1.86",
                 "buildProfile": "release",
                 "buildTarget": "x86_64",
@@ -2287,7 +2287,7 @@ def _estimate_llm_cost(provider: str, model: str, in_tok: int, out_tok: int) -> 
 async def _handle_llm_models(_request: Request, cfg: dict[str, Any]) -> JSONResponse:
     llm_cfg = cfg.get("llm") or {}
     items = [
-        {"id": m.get("name"), "object": "model", "owned_by": "viettel-ai-gateway"}
+        {"id": m.get("name"), "object": "model", "owned_by": "tunai-gateway"}
         for m in (llm_cfg.get("models") or []) + (llm_cfg.get("virtualModels") or [])
         if isinstance(m, dict) and m.get("name")
     ]
@@ -2601,8 +2601,8 @@ async def main() -> None:
     admin_server = uvicorn.Server(admin_config)
     proxy_server = uvicorn.Server(proxy_config)
 
-    print("Viettel AI Gateway UI:  http://127.0.0.1:15000/ui/")
-    print(f"Viettel MCP Data Plane: http://127.0.0.1:{mcp_port}/mcp -> {resolve_mcp_target_url()}")
+    print("TunAI Personal Gateway UI: http://127.0.0.1:15000/ui/")
+    print(f"TunAI MCP Data Plane:      http://127.0.0.1:{mcp_port}/mcp -> {resolve_mcp_target_url()}")
     await asyncio.gather(admin_server.serve(), proxy_server.serve())
 
 
